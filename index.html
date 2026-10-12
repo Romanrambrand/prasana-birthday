@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100d24">
+  <title>A Birthday Surprise</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #fbf7ff;
+      --muted: #c5bdd8;
+      --pink: #ff75bb;
+      --purple: #ad8cff;
+      --cyan: #81edff;
+      --panel: rgba(28, 23, 51, .78);
+      --line: rgba(255, 255, 255, .13);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--ink);
+      font-family: ui-rounded, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(ellipse at 12% 16%, rgba(111, 63, 172, .30), transparent 38%),
+        radial-gradient(ellipse at 86% 78%, rgba(255, 91, 165, .17), transparent 35%),
+        linear-gradient(145deg, #100d24 0%, #17132f 54%, #101a31 100%);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .ambient, .ambient::before, .ambient::after {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .ambient::before, .ambient::after {
+      content: "";
+      inset: auto;
+      width: 210px;
+      height: 270px;
+      border: 1px solid rgba(255, 117, 187, .30);
+      border-radius: 50% 50% 46% 46%;
+      opacity: .35;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .ambient::before {
+      left: 5%;
+      bottom: -55px;
+      background: radial-gradient(ellipse at 35% 25%, rgba(255, 117, 187, .25), rgba(173, 140, 255, .04) 70%);
+    }
+
+    .ambient::after {
+      right: 5%;
+      bottom: -80px;
+      width: 165px;
+      height: 220px;
+      border-color: rgba(129, 237, 255, .27);
+      background: radial-gradient(ellipse at 35% 25%, rgba(129, 237, 255, .20), rgba(129, 237, 255, .02) 70%);
+      animation-delay: -3.5s;
+    }
+
+    .ambient::before, .ambient::after { box-shadow: 0 0 38px rgba(173, 140, 255, .12); }
+
+    .site-header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 24px 0;
+    }
+
+    .brand { font-size: .95rem; font-weight: 800; letter-spacing: .04em; }
+    .brand span { color: var(--pink); }
+    .step-label { color: var(--muted); font-size: .82rem; }
+
+    main {
+      display: grid;
+      min-height: calc(100svh - 78px);
+      place-items: center;
+      padding: 18px 20px 64px;
+    }
+
+    .screen {
+      display: none;
+      width: min(100%, 900px);
+      margin: auto;
+      animation: arrive .65s cubic-bezier(.2, .75, .25, 1) both;
+    }
+
+    .screen.active { display: block; }
+    .screen.narrow { width: min(100%, 570px); }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: 0 24px 90px rgba(0, 0, 0, .28), inset 0 1px rgba(255, 255, 255, .06);
+      backdrop-filter: blur(18px);
+    }
+
+    .entrance, .verification { padding: clamp(30px, 7vw, 66px); text-align: center; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      color: var(--cyan);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 {
+      max-width: 720px;
+      margin: 0 auto 16px;
+      font-size: clamp(2.45rem, 7.5vw, 5.2rem);
+      line-height: .98;
+      letter-spacing: -.065em;
+    }
+
+    .gradient-text {
+      color: transparent;
+      background: linear-gradient(100deg, #ff91c8 8%, #d1adff 52%, #82efff 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+
+    .intro-copy, .verification-copy, .wish {
+      color: var(--muted);
+      font-size: clamp(1rem, 2.4vw, 1.16rem);
+      line-height: 1.75;
+    }
+
+    .intro-copy { max-width: 500px; margin: 0 auto 34px; }
+    .button-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+    .button {
+      display: inline-flex;
+      min-height: 52px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 25px;
+      border: 1px solid transparent;
+      border-radius: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); }
+    .button:focus-visible, input:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
+    .button-primary {
+      color: #22132f;
+      background: linear-gradient(105deg, #ff91c8, #cfacff 62%, #91edff);
+      box-shadow: 0 10px 30px rgba(211, 134, 221, .23);
+    }
+    .button-primary:hover { box-shadow: 0 14px 36px rgba(211, 134, 221, .36); }
+    .button-quiet { border-color: var(--line); background: rgba(255, 255, 255, .07); }
+    .button-quiet:hover { background: rgba(255, 255, 255, .12); }
+    #no-button { touch-action: manipulation; }
+    .hint { min-height: 1.5em; margin: 22px 0 0; color: #a89dbd; font-size: .85rem; }
+
+    .verification h2 { margin-bottom: 12px; font-size: clamp(1.8rem, 5vw, 2.7rem); letter-spacing: -.04em; }
+    .verification-copy { margin-bottom: 25px; }
+    .date-input {
+      display: block;
+      width: 100%;
+      min-height: 56px;
+      margin: 0 auto 18px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, .17);
+      border-radius: 15px;
+      color: var(--ink);
+      background: rgba(9, 8, 22, .58);
+    }
+    .date-input::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(1); }
+    .verification .button { width: 100%; }
+    .error-message { min-height: 1.5em; margin: 13px 0 0; color: #ff9dbd; font-size: .9rem; }
+
+    .celebration { padding: clamp(28px, 6vw, 54px); text-align: center; }
+    .birthday-title {
+      margin: 0 auto 22px;
+      font-size: clamp(2.7rem, 10vw, 6.5rem);
+      line-height: .94;
+      letter-spacing: -.08em;
+      text-shadow: 0 0 35px rgba(255, 117, 187, .23);
+    }
+    .friend-card {
+      margin: 0 auto 22px;
+      padding: 19px 18px;
+      border: 1px solid rgba(255, 143, 203, .27);
+      border-radius: 19px;
+      color: #ffe1f1;
+      background: linear-gradient(110deg, rgba(255, 117, 187, .12), rgba(173, 140, 255, .13), rgba(129, 237, 255, .08));
+      font-size: clamp(1.05rem, 3vw, 1.4rem);
+      font-weight: 800;
+    }
+    .wish {
+      max-width: 690px;
+      margin: 0 auto 25px;
+      padding: 20px 24px;
+      border-left: 3px solid var(--pink);
+      border-radius: 0 16px 16px 0;
+      background: rgba(255, 255, 255, .045);
+      text-align: left;
+    }
+
+    .gallery-screen { width: min(100%, 1000px); }
+    .gallery-heading { margin-bottom: 22px; text-align: center; }
+    .gallery-heading h2 { margin-bottom: 8px; font-size: clamp(2rem, 6vw, 3.6rem); letter-spacing: -.06em; }
+    .gallery-heading p { margin-bottom: 0; color: var(--muted); }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+    }
+    .photo-card {
+      overflow: hidden;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 19px;
+      background: rgba(28, 23, 51, .76);
+      transition: transform .25s ease, border-color .25s ease;
+    }
+    .photo-card:hover { transform: translateY(-5px) rotate(-.5deg); border-color: rgba(255, 145, 200, .48); }
+    .photo-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 4.5;
+      object-fit: cover;
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(255, 117, 187, .22), rgba(129, 237, 255, .12));
+    }
+    .photo-card figcaption { padding: 12px 7px 6px; color: #e9ddf6; font-size: .9rem; font-weight: 700; }
+    .gallery-actions { margin-top: 22px; text-align: center; }
+
+    #confetti-layer { position: fixed; inset: 0; z-index: 10; overflow: hidden; pointer-events: none; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+    .confetti {
+      position: absolute;
+      top: -18px;
+      width: 9px;
+      height: 14px;
+      opacity: 0;
+      animation: confetti-fall var(--duration) cubic-bezier(.18, .65, .45, 1) forwards;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(15px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-24px) rotate(4deg); }
+    }
+    @keyframes confetti-fall {
+      0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg); }
+      85% { opacity: 1; }
+      100% { opacity: 0; transform: translate3d(var(--drift), 105vh, 0) rotate(var(--spin)); }
+    }
+
+    @media (max-width: 640px) {
+      .site-header { width: calc(100% - 32px); padding: 18px 0; }
+      main { min-height: calc(100svh - 65px); padding: 12px 16px 38px; }
+      .card { border-radius: 23px; }
+      .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .photo-card { padding: 7px; border-radius: 15px; }
+      .photo-card img { aspect-ratio: 1 / 1.12; }
+      .photo-card figcaption { font-size: .8rem; }
+      .ambient::before { left: -95px; }
+      .ambient::after { right: -90px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="brand">A LITTLE <span>MAGIC</span> ✦</div>
+    <div class="step-label" id="step-label" aria-live="polite">A surprise is waiting</div>
+  </header>
+
+  <main>
+    <section class="screen active" id="entrance-screen" aria-labelledby="entrance-title">
+      <div class="card entrance">
+        <div class="eyebrow">✦ An important question ✦</div>
+        <h1 id="entrance-title">Hi Best Friend <span class="gradient-text" data-friend-name>Prasanna</span>! 👋✨</h1>
+        <p class="intro-copy">Unnodaya Birthday wish da ithu! 🎁 Inaikku un birthday-ukku ennala mudinjadha naan unakkaga panni irukken! Surprise-a paarkka ready-a?</p>
+        <div class="button-row">
+          <button class="button button-primary" id="yes-button" type="button">YES! 😍</button>
+          <button class="button button-quiet" id="no-button" type="button">NO 😜</button>
+        </div>
+        <p class="hint" id="entrance-hint" aria-live="polite">Choose wisely… or try to catch the other button.</p>
+      </div>
+    </section>
+
+    <section class="screen narrow" id="verification-screen" aria-labelledby="verification-title" aria-hidden="true">
+      <form class="card verification" id="dob-form">
+        <div class="eyebrow">🔐 Just one little secret</div>
+        <h2 id="verification-title">Enter your exact Date of Birth</h2>
+        <p class="verification-copy">Enter 12/10/2004 to unlock your memories! 🔑</p>
+        <label for="dob-input" class="sr-only">Date of birth</label>
+        <input class="date-input" id="dob-input" type="date" required autocomplete="bday">
+        <button class="button button-primary" type="submit">Unlock Surprise <span aria-hidden="true">✨</span></button>
+        <p class="error-message" id="dob-error" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="screen" id="celebration-screen" aria-labelledby="birthday-title" aria-hidden="true">
+      <div class="card celebration">
+        <div class="eyebrow">Today is all about you ✨</div>
+        <h2 class="birthday-title gradient-text" id="birthday-title">HAPPY BIRTHDAY PRASANNA! 🎉🎂</h2>
+        <div class="friend-card">14 Years of Unbreakable Friendship! 👬✨</div>
+        <p class="wish" id="birthday-wish"></p>
+        <button class="button button-primary" id="memories-button" type="button">Take a trip down memory lane <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <section class="screen gallery-screen" id="gallery-screen" aria-labelledby="gallery-title" aria-hidden="true">
+      <div class="gallery-heading">
+        <div class="eyebrow">Namma friendship ✨</div>
+        <h2 class="gradient-text" id="gallery-title">Namma Memories 📸</h2>
+        <p>Namma serndhu irundha pala memories namakku irukku da. Idhellam unakku nyabagam irukka? Naan eppavume idhellam marakka maatten! 💭✨</p>
+      </div>
+      <div class="gallery">
+        <figure class="photo-card">
+          <!-- Replace photo1.jpg with the path to your first favorite photo. -->
+          <img src="C:\Users\RAM S\Desktop\prasana\IMG-20260517-WA0024~2.jpg" alt="A favorite early memory together" loading="lazy">
+          <figcaption>Unakku nyabagam irukka? 🤔✨</figcaption>
+        </figure>
+        <figure class="photo-card">
+          <!-- Replace photo2.jpg with the path to another photo of you together. -->
+          <img src="C:\Users\RAM S\Desktop\prasana\IMG_20261012_171656-COLLAGE.jpg" alt="A fun day spent together" loading="lazy">
+          <figcaption>Golden Moments 💫🔥</figcaption>
+        </figure>
+        <figure class="photo-card">
+          <!-- Replace photo3.jpg with the path to another favorite photo. -->
+          <img src="C:\Users\RAM S\Desktop\prasana\file_0000000098848211a5ebf57e349de24d.jpg" alt="A lovely moment from your friendship" loading="lazy">
+          <figcaption>Unforgettable Days 🎒🤝</figcaption>
+        </figure>
+      </div>
+      <p>Miss you bro! 🫂❤️</p>
+      <div class="gallery-actions">
+        <button class="button button-quiet" id="back-button" type="button">← Back to your birthday wish</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="confetti-layer" aria-hidden="true"></div>
+
+  <script>
+    // Personalize the surprise here.
+    const FRIEND_NAME = "Prasanna";
+    const BIRTHDAY_WISH = "Machan Prasanna, Happy Birthday da! 14 years-a namma serndhu irukkom, innum pala varusham namakku idhe friendship thodarnudey irukkanum. Keep smiling always! 🥂🔥";
+
+    const screens = {
+      entrance: document.getElementById("entrance-screen"),
+      verification: document.getElementById("verification-screen"),
+      celebration: document.getElementById("celebration-screen"),
+      gallery: document.getElementById("gallery-screen")
+    };
+    const stepLabel = document.getElementById("step-label");
+    const noButton = document.getElementById("no-button");
+    const hint = document.getElementById("entrance-hint");
+    const confettiLayer = document.getElementById("confetti-layer");
+    let noHasMoved = false;
+    let lastDodge = 0;
+
+    document.querySelectorAll("[data-friend-name]").forEach((element) => {
+      element.textContent = FRIEND_NAME;
+    });
+    document.getElementById("birthday-wish").textContent = BIRTHDAY_WISH;
+    const photoPlaceholder = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#674478"/><stop offset="1" stop-color="#264958"/></linearGradient></defs><rect width="400" height="450" fill="url(#g)"/><circle cx="200" cy="180" r="54" fill="none" stroke="#f4c8f1" stroke-width="7"/><path d="M160 180h80m-40-40v80" stroke="#f4c8f1" stroke-width="7" stroke-linecap="round"/><text x="200" y="290" fill="#fff" font-family="system-ui,sans-serif" font-size="23" text-anchor="middle">Your photo goes here</text></svg>'
+    );
+    document.querySelectorAll(".photo-card img").forEach((image) => {
+      image.addEventListener("error", () => {
+        image.src = photoPlaceholder;
+      }, { once: true });
+    });
+
+    function showScreen(name, label) {
+      Object.entries(screens).forEach(([screenName, screen]) => {
+        const active = screenName === name;
+        screen.classList.toggle("active", active);
+        screen.setAttribute("aria-hidden", String(!active));
+      });
+      stepLabel.textContent = label;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function moveNoButton() {
+      const now = Date.now();
+      if (now - lastDodge < 450) return;
+      lastDodge = now;
+      const bounds = noButton.getBoundingClientRect();
+      const padding = 14;
+      const maxX = Math.max(padding, window.innerWidth - bounds.width - padding);
+      const maxY = Math.max(padding, window.innerHeight - bounds.height - padding);
+      const nextX = padding + Math.random() * (maxX - padding);
+      const nextY = padding + Math.random() * (maxY - padding);
+
+      if (!noHasMoved) {
+        noButton.style.position = "fixed";
+        noButton.style.left = `${bounds.left}px`;
+        noButton.style.top = `${bounds.top}px`;
+        noButton.style.margin = "0";
+        noButton.style.zIndex = "5";
+        noHasMoved = true;
+      }
+
+      requestAnimationFrame(() => {
+        noButton.style.left = `${nextX}px`;
+        noButton.style.top = `${nextY}px`;
+      });
+      hint.textContent = "Nice try! That button has other plans 😜";
+    }
+
+    document.getElementById("yes-button").addEventListener("click", () => {
+      showScreen("verification", "Unlocking your memories");
+      document.getElementById("dob-input").focus({ preventScroll: true });
+    });
+
+    noButton.addEventListener("pointerenter", moveNoButton);
+    noButton.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      moveNoButton();
+    });
+    noButton.addEventListener("focus", moveNoButton);
+    noButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      moveNoButton();
+    });
+
+    document.getElementById("dob-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = document.getElementById("dob-input");
+      const error = document.getElementById("dob-error");
+      if (!input.value || !input.validity.valid) {
+        input.reportValidity();
+        return;
+      }
+      if (input.value !== "2004-10-12") {
+        error.textContent = "Thappana date-u mapple! Correct date-a podu (12/10/2004)! ❌";
+        input.focus();
+        return;
+      }
+      error.textContent = "";
+      launchConfetti();
+      showScreen("celebration", "A birthday wish, just for you");
+    });
+
+    function launchConfetti() {
+      const colors = ["#ff75bb", "#ad8cff", "#81edff", "#ffe77a", "#8ef0bd", "#ff9d75"];
+      const pieceCount = 100;
+      confettiLayer.replaceChildren();
+      for (let index = 0; index < pieceCount; index += 1) {
+        const piece = document.createElement("span");
+        piece.className = "confetti";
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.backgroundColor = colors[index % colors.length];
+        piece.style.setProperty("--drift", `${Math.random() * 240 - 120}px`);
+        piece.style.setProperty("--spin", `${Math.random() * 1000 - 500}deg`);
+        piece.style.setProperty("--duration", `${2.5 + Math.random() * 2}s`);
+        piece.style.setProperty("--delay", `${Math.random() * 0.7}s`);
+        confettiLayer.append(piece);
+      }
+      window.setTimeout(() => confettiLayer.replaceChildren(), 6000);
+    }
+
+    document.getElementById("memories-button").addEventListener("click", () => {
+      showScreen("gallery", "Your friendship, in snapshots");
+    });
+    document.getElementById("back-button").addEventListener("click", () => {
+      showScreen("celebration", "A birthday wish, just for you");
+    });
+
+    window.addEventListener("resize", () => {
+      if (!noHasMoved) return;
+      const bounds = noButton.getBoundingClientRect();
+      noButton.style.left = `${Math.min(bounds.left, window.innerWidth - bounds.width - 14)}px`;
+      noButton.style.top = `${Math.min(bounds.top, window.innerHeight - bounds.height - 14)}px`;
+    });
+  </script>
+</body>
+</html>
